@@ -14,4 +14,8 @@
   "name" : "qwer",
   "psw" : "ww",
   "status" : "offline"
+}, {
+  "name" : "zio",
+  "psw" : "1234",
+  "status" : "offline"
 } ]

@@ -96,14 +96,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
 
                     }else if(key.isReadable()){
                         SocketChannel client = (SocketChannel) key.channel();
-                        //ObjectInputStream ois = new ObjectInputStream(client.socket().getInputStream());
-                        //DataOutputStream dos = new DataOutputStream(client.socket().getOutputStream());
-                        //User userClient = (User) ois.readObject();
-                        ByteBuffer buffer   = ByteBuffer.allocate(128);
-                        client.read(buffer);
-                        String userName = new String(buffer.array()).trim();
-                        System.out.println("read: " + userName.substring(4));
-                        System.out.println("login: " + login(userName.substring(4),"passw"));
+
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
