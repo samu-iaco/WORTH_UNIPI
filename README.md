@@ -1,3 +1,2 @@
 WORTH
 CIAO
-COIA DE
