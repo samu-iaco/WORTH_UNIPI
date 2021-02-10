@@ -60,7 +60,7 @@ public class ClientMain extends RemoteObject{
     }
 
     private void loginUser(){
-
+        String ciao;
     }
 
 
