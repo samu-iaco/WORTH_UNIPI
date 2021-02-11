@@ -1,6 +1,9 @@
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public interface ServerInterface {
-    int login(String nickName, String password) throws RemoteException;
+    List<User> login(String nickName, String password) throws RemoteException;
+
+
 }

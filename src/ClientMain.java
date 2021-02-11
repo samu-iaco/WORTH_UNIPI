@@ -14,6 +14,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RemoteObject;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ClientMain extends RemoteObject{
@@ -23,6 +24,7 @@ public class ClientMain extends RemoteObject{
 
     private DataInputStream dis;
     private ObjectOutputStream oos;
+    private ObjectInputStream ois;
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -50,7 +52,7 @@ public class ClientMain extends RemoteObject{
                         loginUser(command, socketChannel);
                 }
             }
-        } catch (NotBoundException | IOException | UserAlreadyExistException e) {
+        } catch (NotBoundException | IOException | UserAlreadyExistException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -63,9 +65,17 @@ public class ClientMain extends RemoteObject{
         System.out.println(result);
     }
 
-    private void loginUser(String command, SocketChannel socketChannel) throws IOException {
+    private void loginUser(String command, SocketChannel socketChannel) throws IOException, ClassNotFoundException {
         System.out.println("Tentativo di login da: " + command);
+        ArrayList<User> listUsers;
         socketChannel.write(ByteBuffer.wrap(command.getBytes(StandardCharsets.UTF_8)));
+
+        ois = new ObjectInputStream(socketChannel.socket().getInputStream());
+        System.out.println("ciao");
+        listUsers = (ArrayList<User>) ois.readObject();
+        for(User currUser: listUsers){
+            System.out.println("Nome utente: " + currUser.getName());
+        }
     }
 
 

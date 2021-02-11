@@ -18,4 +18,8 @@
   "name" : "zio",
   "psw" : "1234",
   "status" : "offline"
+}, {
+  "name" : "thebigintheuorld",
+  "psw" : "12345",
+  "status" : "offline"
 } ]

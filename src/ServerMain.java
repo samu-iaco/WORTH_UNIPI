@@ -108,6 +108,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                                 if(splittedCommand.length<3) login("","");
                                 else if(splittedCommand.length>3) System.out.println("Hai inserito troppi argomenti");
                                 else login(splittedCommand[1], splittedCommand[2]);
+                                //devo aggiungere la risposta da inviare al client
                         }
                     }
                 } catch (IOException e) {
@@ -149,24 +150,27 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
     }
 
     @Override
-    public int login(String nickName, String password) throws RemoteException {
+    public List<User> login(String nickName, String password) throws RemoteException {
         System.out.println("Richiesta di LOGIN da parte di: " + nickName);
+        ArrayList<User> returnList = new ArrayList<>();
         if(nickName.isEmpty() || password.isEmpty()) System.err.println("Il nome utente e la paword non possono essere vuoti");
         User user = new User(nickName,password);
         for(User currUser: users){
             if(user.getName().equals(currUser.getName())){
                 if(user.getPsw().equals(currUser.getPsw())){
                     if(user.getStatus().equals("offline")){
-                        System.out.println("so qua");
+                        update(user.getName(),"online");
                         user.changeStatus("online");
                         System.out.println("L'utente " + user.getName() + " ha cambiato il suo status in: " + user.getStatus());
                     }
 
                 }
             }
+            returnList.add(user);
+
         }
 
-        return 0;
+        return returnList;
     }
 
     @Override
