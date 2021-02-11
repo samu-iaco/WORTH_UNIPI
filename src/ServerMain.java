@@ -57,7 +57,8 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
     public void start(){
         ServerSocketChannel serverSocket = null;
         Selector selector = null;
-        String[] Splittedcommand;
+        String command;
+        String[] splittedCommand;
 
         try{
             serverSocket = ServerSocketChannel.open();  //apertura del socket di ascolto
@@ -97,6 +98,17 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                     }else if(key.isReadable()){
                         SocketChannel client = (SocketChannel) key.channel();
 
+                        ByteBuffer buffer = ByteBuffer.allocate(128);
+                        client.read(buffer);
+                        command = new String(buffer.array()).trim();
+                        splittedCommand = command.split(" ");
+                        System.out.println("splitted 0: " + splittedCommand[0]);
+                        switch (splittedCommand[0].toLowerCase()){
+                            case "login":
+                                if(splittedCommand.length<3) login("","");
+                                else if(splittedCommand.length>3) System.out.println("Hai inserito troppi argomenti");
+                                else login(splittedCommand[1], splittedCommand[2]);
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -134,7 +146,27 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
         }
 
 
+    }
 
+    @Override
+    public int login(String nickName, String password) throws RemoteException {
+        System.out.println("Richiesta di LOGIN da parte di: " + nickName);
+        if(nickName.isEmpty() || password.isEmpty()) System.err.println("Il nome utente e la paword non possono essere vuoti");
+        User user = new User(nickName,password);
+        for(User currUser: users){
+            if(user.getName().equals(currUser.getName())){
+                if(user.getPsw().equals(currUser.getPsw())){
+                    if(user.getStatus().equals("offline")){
+                        System.out.println("so qua");
+                        user.changeStatus("online");
+                        System.out.println("L'utente " + user.getName() + " ha cambiato il suo status in: " + user.getStatus());
+                    }
+
+                }
+            }
+        }
+
+        return 0;
     }
 
     @Override
@@ -201,11 +233,5 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
     }
 
 
-    @Override
-    public int login(String nickName, String password) {
-        System.out.println("Richiesta di LOGIN da parte di: " + nickName);
 
-
-        return 0;
-    }
 }

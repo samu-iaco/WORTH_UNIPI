@@ -21,6 +21,8 @@ public class ClientMain extends RemoteObject{
     private static final int PORT_TCP = 9999;
     private static final String ServerAddress = "127.0.0.1";
 
+    private DataInputStream dis;
+    private ObjectOutputStream oos;
 
     public static void main(String[] args){
         ClientMain clientMain = new ClientMain();
@@ -44,6 +46,8 @@ public class ClientMain extends RemoteObject{
                 switch (splittedCommand[0].toLowerCase()){
                     case "register":
                         registerUser(splittedCommand,loginRMI);
+                    case "login":
+                        loginUser(command, socketChannel);
                 }
             }
         } catch (NotBoundException | IOException | UserAlreadyExistException e) {
@@ -59,8 +63,9 @@ public class ClientMain extends RemoteObject{
         System.out.println(result);
     }
 
-    private void loginUser(){
-        String ciao;
+    private void loginUser(String command, SocketChannel socketChannel) throws IOException {
+        System.out.println("Tentativo di login da: " + command);
+        socketChannel.write(ByteBuffer.wrap(command.getBytes(StandardCharsets.UTF_8)));
     }
 
 
