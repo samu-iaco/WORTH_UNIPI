@@ -44,12 +44,14 @@ public class ClientMain extends RemoteObject{
             while(ok){
                 String command = in.nextLine();
                 String[] splittedCommand = command.split(" ");
-
+                boolean login = false;
                 switch (splittedCommand[0].toLowerCase()){
                     case "register":
                         registerUser(splittedCommand,loginRMI);
+                        break;
                     case "login":
-                        loginUser(command, socketChannel);
+                        login = loginUser(command, socketChannel);
+                        break;
                 }
             }
         } catch (NotBoundException | IOException | UserAlreadyExistException | ClassNotFoundException e) {
@@ -65,17 +67,16 @@ public class ClientMain extends RemoteObject{
         System.out.println(result);
     }
 
-    private void loginUser(String command, SocketChannel socketChannel) throws IOException, ClassNotFoundException {
+    public boolean loginUser(String command, SocketChannel socketChannel) throws IOException, ClassNotFoundException {
         System.out.println("Tentativo di login da: " + command);
-        ArrayList<User> listUsers;
+        UserList<User> userList;
         socketChannel.write(ByteBuffer.wrap(command.getBytes(StandardCharsets.UTF_8)));
 
-        ois = new ObjectInputStream(socketChannel.socket().getInputStream());
+        ois = new ObjectInputStream(socketChannel.socket().getInputStream());   //blocco qui
         System.out.println("ciao");
-        listUsers = (ArrayList<User>) ois.readObject();
-        for(User currUser: listUsers){
-            System.out.println("Nome utente: " + currUser.getName());
-        }
+        userList = (UserList<User>) ois.readObject();
+        if(userList.getList().size() != 0) System.out.println("non male");
+        return true;
     }
 
 

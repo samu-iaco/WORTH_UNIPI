@@ -95,7 +95,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                         client.configureBlocking(false);
                         client.register(selector,SelectionKey.OP_READ);
 
-                    }else if(key.isReadable()){
+                    }else if(key.isReadable()){     //richiesta di lettura
                         SocketChannel client = (SocketChannel) key.channel();
 
                         ByteBuffer buffer = ByteBuffer.allocate(128);
@@ -105,12 +105,27 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                         System.out.println("splitted 0: " + splittedCommand[0]);
                         switch (splittedCommand[0].toLowerCase()){
                             case "login":
-                                if(splittedCommand.length<3) login("","");
+                                UserList<User> userList = null;
+                                if(splittedCommand.length<3) userList = login("","");
                                 else if(splittedCommand.length>3) System.out.println("Hai inserito troppi argomenti");
-                                else login(splittedCommand[1], splittedCommand[2]);
+                                else userList = login(splittedCommand[1], splittedCommand[2]);
                                 //devo aggiungere la risposta da inviare al client
+
+                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                                oos.writeObject(userList);
+
+                                break;
                         }
+                        key.interestOps(SelectionKey.OP_WRITE); //Listening only write operation
                     }
+                    else if (key.isWritable()) { //Catching write requests
+                        //SENDING THE RESPONSE
+                        SocketChannel client = (SocketChannel) key.channel();
+                        //buffer assignment8
+                        key.interestOps(SelectionKey.OP_READ); //Listening only reading operation
+                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -150,8 +165,9 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
     }
 
     @Override
-    public List<User> login(String nickName, String password) throws RemoteException {
+    public UserList<User> login(String nickName, String password) throws RemoteException {
         System.out.println("Richiesta di LOGIN da parte di: " + nickName);
+        UserList<User> list;
         ArrayList<User> returnList = new ArrayList<>();
         if(nickName.isEmpty() || password.isEmpty()) System.err.println("Il nome utente e la paword non possono essere vuoti");
         User user = new User(nickName,password);
@@ -170,7 +186,8 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
 
         }
 
-        return returnList;
+        list = new UserList<>(returnList);
+        return list;
     }
 
     @Override
