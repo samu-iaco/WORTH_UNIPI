@@ -23,7 +23,6 @@ public class ClientMain extends RemoteObject{
     private static final String ServerAddress = "127.0.0.1";
 
     private DataInputStream dis;
-    private ObjectOutputStream oos;
     private ObjectInputStream ois;
 
     public static void main(String[] args){
@@ -41,6 +40,7 @@ public class ClientMain extends RemoteObject{
             socketChannel.connect(new InetSocketAddress(ServerAddress, PORT_TCP));
             Scanner in = new Scanner(System.in);
 
+
             while(ok){
                 String command = in.nextLine();
                 String[] splittedCommand = command.split(" ");
@@ -51,6 +51,7 @@ public class ClientMain extends RemoteObject{
                         break;
                     case "login":
                         login = loginUser(command, socketChannel);
+                        System.out.println("login: " + login);
                         break;
                 }
             }
@@ -71,9 +72,9 @@ public class ClientMain extends RemoteObject{
         System.out.println("Tentativo di login da: " + command);
         UserList<User> userList;
         socketChannel.write(ByteBuffer.wrap(command.getBytes(StandardCharsets.UTF_8)));
-
-        ois = new ObjectInputStream(socketChannel.socket().getInputStream());   //blocco qui
-        System.out.println("ciao");
+        System.out.println("ciao prima");
+        ObjectInputStream ois = new ObjectInputStream(socketChannel.socket().getInputStream());   //blocco qui
+        System.out.println("ciao dopo");
         userList = (UserList<User>) ois.readObject();
         if(userList.getList().size() != 0) System.out.println("non male");
         return true;

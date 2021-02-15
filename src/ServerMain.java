@@ -24,6 +24,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
     private final ObjectMapper mapper;
     private List<User> users; //utenti registrati
     private List<CallBackAux> clients;
+    private final Map<SocketChannel,List<byte[]>> dataMap; //lo uso per risondere al client
 
     public ServerMain(){
         super();
@@ -32,6 +33,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         mapper.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, true);
         dataDir = new File("./Data");
+        dataMap = new HashMap<>();
         loadData();
     }
 
@@ -59,6 +61,9 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
         Selector selector = null;
         String command;
         String[] splittedCommand;
+        List<byte[]> data;
+        ByteArrayOutputStream baos; ObjectOutputStream oos; byte[] res;
+
 
         try{
             serverSocket = ServerSocketChannel.open();  //apertura del socket di ascolto
@@ -91,6 +96,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                     if(key.isAcceptable()){     //accettazione di richieste
                         ServerSocketChannel server = (ServerSocketChannel) key.channel();
                         SocketChannel client = server.accept();
+                        dataMap.put(client, new ArrayList<>());
                         System.out.println("SERVER: connessione da " + client + " accettata");
                         client.configureBlocking(false);
                         client.register(selector,SelectionKey.OP_READ);
@@ -105,17 +111,22 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                         System.out.println("splitted 0: " + splittedCommand[0]);
                         switch (splittedCommand[0].toLowerCase()){
                             case "login":
-                                UserList<User> userList = null;
-                                if(splittedCommand.length<3) userList = login("","");
-                                else if(splittedCommand.length>3) System.out.println("Hai inserito troppi argomenti");
-                                else userList = login(splittedCommand[1], splittedCommand[2]);
-                                //devo aggiungere la risposta da inviare al client
+                                UserList<User> resultLogin;
+                                if(splittedCommand.length<3) resultLogin = login("","");
+                                else if(splittedCommand.length>3) resultLogin = new UserList<>(null,"not ok");
+                                //System.out.println("Hai inserito troppi argomenti");
+                                else resultLogin = login(splittedCommand[1], splittedCommand[2]);
 
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ObjectOutputStream oos = new ObjectOutputStream(baos);
-                                oos.writeObject(userList);
 
+
+                                data = this.dataMap.get(client);
+                                baos = new ByteArrayOutputStream( );
+                                oos = new ObjectOutputStream(baos);
+                                oos.writeObject(resultLogin);
+                                res = baos.toByteArray( );
+                                data.add(res);
                                 break;
+
                         }
                         key.interestOps(SelectionKey.OP_WRITE); //Listening only write operation
                     }
@@ -129,6 +140,7 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
             }
         }
 
@@ -168,25 +180,28 @@ public class ServerMain extends RemoteObject implements RegisterInterfaceRMI,Ser
     public UserList<User> login(String nickName, String password) throws RemoteException {
         System.out.println("Richiesta di LOGIN da parte di: " + nickName);
         UserList<User> list;
+        boolean result = false;
         ArrayList<User> returnList = new ArrayList<>();
         if(nickName.isEmpty() || password.isEmpty()) System.err.println("Il nome utente e la paword non possono essere vuoti");
         User user = new User(nickName,password);
         for(User currUser: users){
             if(user.getName().equals(currUser.getName())){
-                if(user.getPsw().equals(currUser.getPsw())){
+                if(currUser.getPsw().equals(password)){
                     if(user.getStatus().equals("offline")){
-                        update(user.getName(),"online");
+                        update(user.getName(),"online");    //effettuato il login vengono fatte partire le callbacks
                         user.changeStatus("online");
+                        result = true;
                         System.out.println("L'utente " + user.getName() + " ha cambiato il suo status in: " + user.getStatus());
                     }
 
-                }
+                }else System.err.println("password errata!");
             }
             returnList.add(user);
 
         }
 
-        list = new UserList<>(returnList);
+        if(result = true) list = new UserList<>(returnList,"ok");
+        else list = new UserList<>(returnList,"not ok");
         return list;
     }
 
